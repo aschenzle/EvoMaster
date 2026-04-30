@@ -90,9 +90,9 @@ runs:
         } >> "$GITHUB_STEP_SUMMARY"
 
         if [ "${regression}" = "true" ]; then
-          echo "METRICS_REGRESSION=true" >> "$GITHUB_ENV"
+          touch build-metrics-regression.flag
         else
-          echo "METRICS_REGRESSION=false" >> "$GITHUB_ENV"
+          rm -f build-metrics-regression.flag
         fi
 
     - name: Upload current metrics artifact
@@ -102,8 +102,3 @@ runs:
         path: build-metrics.env
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
-
-    - name: Mark metrics regression
-      if: ${{ env.METRICS_REGRESSION == 'true' }}
-      shell: bash
-      run: exit 1
