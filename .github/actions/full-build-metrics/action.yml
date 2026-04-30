@@ -23,6 +23,17 @@ inputs:
     required: false
     default: "90"
 
+outputs:
+  regression:
+    description: Whether warnings or errors increased compared to the baseline metrics
+    value: ${{ steps.compare.outputs.regression }}
+  warnings:
+    description: Number of Maven warnings in the current full-build-base log
+    value: ${{ steps.compare.outputs.warnings }}
+  errors:
+    description: Number of Maven errors in the current full-build-base log
+    value: ${{ steps.compare.outputs.errors }}
+
 runs:
   using: composite
   steps:
@@ -37,6 +48,7 @@ runs:
         if_no_artifact_found: warn
 
     - name: Count warnings/errors and compare
+      id: compare
       shell: bash
       run: |
         if [ -f "${{ inputs.log-file }}" ]; then
@@ -89,11 +101,9 @@ runs:
           fi
         } >> "$GITHUB_STEP_SUMMARY"
 
-        if [ "${regression}" = "true" ]; then
-          echo "METRICS_REGRESSION=true" >> "$GITHUB_ENV"
-        else
-          echo "METRICS_REGRESSION=false" >> "$GITHUB_ENV"
-        fi
+        echo "regression=${regression}" >> "$GITHUB_OUTPUT"
+        echo "warnings=${warnings_count}" >> "$GITHUB_OUTPUT"
+        echo "errors=${errors_count}" >> "$GITHUB_OUTPUT"
 
     - name: Upload current metrics artifact
       uses: actions/upload-artifact@v7
@@ -102,8 +112,3 @@ runs:
         path: build-metrics.env
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
-
-    - name: Mark metrics regression
-      if: ${{ env.METRICS_REGRESSION == 'true' }}
-      shell: bash
-      run: exit 1
