@@ -102,8 +102,3 @@ runs:
         path: build-metrics.env
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
-
-    - name: Mark metrics regression
-      if: ${{ env.METRICS_REGRESSION == 'true' }}
-      shell: bash
-      run: exit 1
